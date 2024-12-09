@@ -8,11 +8,11 @@ This repository contains the server configuration files and deployment scripts n
 
 On a fresh machine, preferably running Debian 12, get the `fresh_setup.sh` script with the following:
 
-`wget https://raw.githubusercontent.com/CSSS/csss-site-config/refs/heads/master/fresh_setup.sh`
-
-`chmod +x fresh_setup.sh`
-
-`./fresh_setup.sh`
+```sh
+wget https://raw.githubusercontent.com/CSSS/csss-site-config/refs/heads/master/fresh_setup.sh
+chmod +x fresh_setup.sh
+./fresh_setup.sh
+```
 
 And run it as the superuser. (The server will be completely prepared and deployed.)
 
@@ -55,13 +55,23 @@ When this script is finished executing, confirm that the deployment was successf
 
 ### Update Configs / Update HTTPS Certificates
 
-To update any configuration files including the HTTPS certificates:
+To update any configuration files including the HTTPS certificates, do the following:
 
-- SSH into the https://new.sfucsss.org server as the root user.
-- Run: `cd /home/csss-site/csss-site-config` to enter the csss-site-config repository.
-- Run: `git pull origin master` to pull new commits.
-- Run: `git submodule update` to make sure either submodule is up-to-date.
-- Run: `./update_config.sh` as the root user to update all configuration files.
+```bash
+# 1. SSH into the https://new.sfucsss.org server as the root user
+
+# 2. enter the csss-site-config repository
+cd /home/csss-site/csss-site-config
+
+# 3. pull new commits
+git pull origin master 
+
+# 4. make sure either submodule is up-to-date
+git submodule update
+
+# 5. run as root to update all configuration files
+./update_config.sh 
+```
 
 When this script is finished executing, confirm that the update was successful by checking the site.
 
