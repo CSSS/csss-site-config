@@ -43,6 +43,7 @@ The following process should be followed to make a deployment to https://new.sfu
 - Ensure the changes to be deployed are on the `main` branch of csss-site-backend and the `build` branch of csss-site-frontend.
 - Clone the csss-site-config repository on your local development machine (see the above section on Cloning With Submodules).
 - Run: `git submodule update --remote` from inside the csss-site-config repository to pull the to be deployed changes from csss-site-backend and csss-site-frontend.
+  - also `cd frontend; git pull origin build` and `cd backend; git pull origin main`.
 - Run: `git add backend frontend` to make csss-site-config acknowledge the new commits to either submodule.
 - Run: `git commit -m "(your-commit-message)" && git push origin master` to update the csss-site-config repository.
 - SSH into the https://new.sfucsss.org server as the root user.
