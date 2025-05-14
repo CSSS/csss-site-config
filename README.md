@@ -48,8 +48,9 @@ The following process should be followed to make a deployment to https://new.sfu
 - Run: `git commit -m "(your-commit-message)" && git push origin master` to update the csss-site-config repository.
 - SSH into the https://new.sfucsss.org server as the root user.
 - Run: `cd /home/csss-site/csss-site-config` to enter the csss-site-config repository.
+- Run: `su csss-site` to log into the csss-site user, which is used to deploy.
 - Run: `git pull origin master` to pull new commits.
-- Run: `git submodule update` to make sure either submodule is up-to-date.
+- Run: `git submodule update` to make sure either submodule is up-to-date as set in the repository.
 - Run: `./deploy.sh` as the root user to deploy the backend and frontend.
 
 When this script is finished executing, confirm that the deployment was successful by checking the site.
