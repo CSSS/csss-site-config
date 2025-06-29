@@ -33,12 +33,12 @@ while [[ $# -gt 0 ]]; do
         ;;
     -t | --test)
         branch="develop"
-        target="${base_www}/html"
+        target="${base_www}/test-sfucss"
         break
         ;;
     -f | --full)
         branch="master"
-        target="${base_www}/test-sfucsss"
+        target="${base_www}/html"
         break
         ;;
     *)
