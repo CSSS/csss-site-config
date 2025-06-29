@@ -5,25 +5,24 @@
 # This will update the `csss-site-repo` based on what flag you use.
 # This will not update the `backend` submodule.
 
+base_www="/var/www"  # Where the hosted files live
+backup="/tmp/backup" # Backup of the currently hosted files
+git_user="csss-site" # The Linux user that controls the git repo on the deployment VM
+branch=""            # Which csss-site-config branch to use
+target=""            # The specific directory the hosted files will be moved to
+
 # TODO: Add flags to make deployments more granular so that updating subsites won't disturb other things
 show_help() {
     echo "Usage: "$0" [OPTIONS]"
-    echo "This is for updating both the $(build) and $(test) folders."
-    echo "This will not update the $(backend) submodule."
-    echo "This will update the $(csss-site-repo) based on what flag you use."
+    echo "This is for updating both the 'build' and 'test' sites."
+    echo "This will not update the 'backend' submodule."
+    echo "This will update the 'csss-site-config' repo."
     echo ""
     echo "Options:"
     echo "  -h, --help  Display this message"
     echo "  -t, --test  Full deployment of the test site"
     echo "  -f, --full  Full deployment of the main site"
 }
-
-base_www="/var/www"  # Where the hosted files live
-backup="/tmp/backup" # Backup of the currently hosted files
-branch=""            # Which csss-site-config branch to use
-build=""             # Which branch the built site is on
-target=""            # The specific directory the hosted files will be moved to
-git_user="csss-site" # The Linux user that controls the git repo on the deployment VM
 
 # Parse the options
 while [[ $# -gt 0 ]]; do
@@ -34,13 +33,11 @@ while [[ $# -gt 0 ]]; do
         ;;
     -t | --test)
         branch="develop"
-        build="build"
         target="${base_www}/html"
         break
         ;;
     -f | --full)
         branch="master"
-        build="test"
         target="${base_www}/test-sfucsss"
         break
         ;;
@@ -55,6 +52,7 @@ echo "Running checks..."
 # Check that you're the root user first when running the script.
 echo -ne "Checking current user..."
 if [ $(whoami) != 'root' ]; then
+    echo -e "\rChecking current user...FAILED"
     echo "Run this script as the root user"
     echo "Stopping here."
     exit 1
@@ -65,7 +63,7 @@ echo -e "\rChecking current user...SUCCESS"
 echo -ne "Checking target directory exists..."
 if [ ! -d "$target" ]; then
     echo -e "\rChecking target directory exists...FAILED"
-    echo "Directory $($target) doesn't exist"
+    echo "Directory ${target} doesn't exist"
     echo "Stopping here."
     exit 1
 fi
@@ -88,14 +86,14 @@ echo "Updating Git modules..."
 # Run all the git stuff as the Git user
 su - $git_user <<EOF
 echo "Running commands as '$(whoami)'..."
-echo -ne "Checking out '${branch}'..."
-git checkout ${branch}
+echo -ne "Switching to '${branch}'..."
+git switch ${branch}
 if [ $? -ne 0 ]; then
-    echo -e "\rChecking out '${branch}'...FAILED"
+    echo -e "\rSwitching to '${branch}'...FAILED"
     echo "Failed to check out '${branch}'."
     exit 1
 fi
-echo -e "\rChecking out '${branch}'...SUCCESS"
+echo -e "\Switching out '${branch}'...SUCCESS"
 echo -ne "Updating 'csss-site-config'..."
 git pull origin ${branch}
 if [ $? -ne 0 ]; then
@@ -112,6 +110,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo -e "Updating frontend submodule...SUCCESS"
+echo "Returning to master branch"
+git switch master
 EOF
 if [ $? -ne 0 ]; then
     echo "Problem with running Git commands."
@@ -144,6 +144,9 @@ if [ ! -d "$target" ]; then
     exit 1
 fi
 echo -e "\rCopying updated files...SUCCESS"
+
+echo "Cleaning up backup files..."
+rm -rf ${backup}
 
 echo ""
 echo "Deployment successful."
