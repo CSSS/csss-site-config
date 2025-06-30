@@ -51,7 +51,7 @@ done
 echo "Running checks..."
 # Check that you're the root user first when running the script.
 echo -ne "Checking current user..."
-if [ $(whoami) != 'root' ]; then
+if [ $(whoami) != "root" ]; then
     echo -e "\rChecking current user...FAILED"
     echo "Run this script as the root user"
     echo "Stopping here."
@@ -70,38 +70,37 @@ fi
 echo -e "\rChecking target directory exists...SUCCESS"
 echo "All checks passed."
 
-# Move to site config folder to deploy
 echo ""
-echo "Moving into 'csss-site-config'..."
+# Move to the config repo
+echo "Moving into csss-site-config..."
 cd /home/csss-site/csss-site-config
 if [ $? -ne 0 ]; then
-    echo "Couldn't enter directory '/home/csss-site/csss-site-config'."
+    echo "Couldn't enter directory /home/csss-site/csss-site-config."
     echo "Stopping here."
     exit 1
 fi
-
 # Update the csss-site-config repo as the Git user
 echo ""
 echo "Updating Git modules..."
 # Run all the git stuff as the Git user
-su - $git_user <<EOF
-echo "Running commands as '$(whoami)'..."
-echo -ne "Switching to '${branch}'..."
+sudo -u $git_user bash <<EOF
+echo "Running commands as \$(whoami)..."
+echo -ne "Switching to ${branch}..."
 git switch ${branch}
 if [ $? -ne 0 ]; then
-    echo -e "\rSwitching to '${branch}'...FAILED"
-    echo "Failed to check out '${branch}'."
+    echo -e "\rSwitching to ${branch}...FAILED"
+    echo "Failed to check out ${branch}."
     exit 1
 fi
-echo -e "\Switching out '${branch}'...SUCCESS"
-echo -ne "Updating 'csss-site-config'..."
+echo -e "\Switching to ${branch}...SUCCESS"
+echo -ne "Updating csss-site-config..."
 git pull origin ${branch}
 if [ $? -ne 0 ]; then
-    echo -e "Updating 'csss-site-config'...FAILED"
+    echo -e "Updating csss-site-config...FAILED"
     echo "Failed to pull from ${branch}."
     exit 1
 fi
-echo -e "Updating 'csss-site-config'...SUCCESS"
+echo -e "Updating csss-site-config...SUCCESS"
 echo -ne "Updating frontend submodule..."
 git submodule update frontend
 if [ $? -ne 0 ]; then
@@ -122,15 +121,15 @@ echo "Updating Git modules done."
 
 echo ""
 echo "Replacing deployed files..."
-echo "Running commands as '$(whoami)'..."
-echo -ne "Backing up '${target}'..."
+echo "Running commands as $(whoami)..."
+echo -ne "Backing up ${target}..."
 cp -r ${target} ${backup}
 if [ ! -d "$backup" ]; then
-    echo -e "\rBacking up '${target}'...FAILED"
+    echo -e "\rBacking up ${target}...FAILED"
     echo "Stopping here."
     exit 1
 fi
-echo -e "\rBacking up '${target}'...SUCCESS"
+echo -e "\rBacking up ${target}...SUCCESS"
 
 echo "Removing current files..."
 rm -rf ${target}/*
