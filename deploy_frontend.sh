@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
         ;;
     -t | --test)
         branch="develop"
-        target="${base_www}/test-sfucss"
+        target="${base_www}/test-sfucsss"
         break
         ;;
     -f | --full)
