@@ -37,7 +37,7 @@ And promptly `git add` either backend/frontend folder to update the submodules i
 ### Deploying
 
 (Please read the above section for how git submodules work before deploying - don't mess up please.)
-
+#### Full deployment
 The following process should be followed to make a deployment to https://new.sfucsss.org:
 
 - Ensure the changes to be deployed are on the `main` branch of csss-site-backend and the `build` branch of csss-site-frontend.
@@ -54,6 +54,21 @@ The following process should be followed to make a deployment to https://new.sfu
 - Run: `./deploy.sh` as the root user to deploy the backend and frontend.
 
 When this script is finished executing, confirm that the deployment was successful by checking the site.
+
+#### Frontend deployment
+To update just the frontend, you can run:
+```
+./deploy_frontend.sh [OPTIONS]
+```
+
+This script will avoid restarting the `csss-site.service` and will allow you to update the test site as well.
+
+| Option | Description |
+|-----------|-------------|
+| -h/--help | Display this message |
+| -t/--test | Fully deploy the test site |
+| -f/--full | Fully deploy the main site |
+
 
 ### Update Configs / Update HTTPS Certificates
 
