@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
         ;;
     -t | --test)
         branch="develop"
-        target="${base_www}/test-sfucss"
+        target="${base_www}/test-sfucsss"
         break
         ;;
     -f | --full)
@@ -85,14 +85,18 @@ echo "Updating Git modules..."
 # Run all the git stuff as the Git user
 sudo -u $git_user bash <<EOF
 echo "Running commands as \$(whoami)..."
-echo -ne "Switching to ${branch}..."
-git switch ${branch}
-if [ $? -ne 0 ]; then
-    echo -e "\rSwitching to ${branch}...FAILED"
-    echo "Failed to check out ${branch}."
-    exit 1
+echo -ne "Checking current branch"
+current_branch=\$(git branch --show-current)
+if [ ${branch} -ne \$current_branch ]; then
+    echo -ne "Switching to ${branch}..."
+    git switch ${branch}
+    if [ $? -ne 0 ]; then
+        echo -e "\rSwitching to ${branch}...FAILED"
+        echo "Failed to check out ${branch}."
+        exit 1
+    fi
+    echo -e "\Switching to ${branch}...SUCCESS"
 fi
-echo -e "\Switching to ${branch}...SUCCESS"
 echo -ne "Updating csss-site-config..."
 git pull origin ${branch}
 if [ $? -ne 0 ]; then
