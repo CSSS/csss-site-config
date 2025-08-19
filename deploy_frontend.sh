@@ -91,10 +91,10 @@ echo "Updating Git modules..."
 # Run all the git stuff as the Git user
 sudo -u $GIT_USER bash <<EOF
 echo "Running commands as \$(whoami)..."
-echo -ne "Checking current branch"
+echo "Checking current branch"
 current_branch=\$(git branch --show-current)
 if [ ${branch} -ne \$current_branch ]; then
-    echo -ne "Switching to ${branch}..."
+    echo -n "Switching to ${branch}..."
     git switch ${branch}
     if [ $? -ne 0 ]; then
         echo -e "\rSwitching to ${branch}...FAILED"
@@ -154,7 +154,7 @@ if [ ! -d "$target" ]; then
 fi
 echo -e "\rCopying updated files...SUCCESS"
 
-EVENTS=("tech-fair", "fall-hacks", "madness", "frosh")
+EVENTS=("tech-fair" "fall-hacks" "madness" "frosh")
 echo "Creating symlinks to the latest year"
 for event in "${EVENTS[@]}"; do
   event_dir="${target}/${event}"
