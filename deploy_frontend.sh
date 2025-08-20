@@ -93,7 +93,7 @@ sudo -u $GIT_USER bash <<EOF
 echo "Running commands as \$(whoami)..."
 echo "Checking current branch"
 current_branch=\$(git branch --show-current)
-if [ ${branch} -ne \$current_branch ]; then
+if [ ${branch} != \$current_branch ]; then
     echo -n "Switching to ${branch}..."
     git switch ${branch}
     if [ $? -ne 0 ]; then
