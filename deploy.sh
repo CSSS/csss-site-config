@@ -3,15 +3,15 @@
 # make sure user is root
 user=$(whoami)
 if [ $user != 'root' ]; then
-	echo "this script must be run as the superuser."
-	exit 1
+  echo "this script must be run as the superuser."
+  exit 1
 fi
 
 cd /home/csss-site/csss-site-config
 if [ $? -ne 0 ]; then
-    echo "couldn't enter directory /home/csss-site/csss-site-config."
-    echo "stopping here."
-    exit 1
+  echo "couldn't enter directory /home/csss-site/csss-site-config."
+  echo "stopping here."
+  exit 1
 fi
 
 echo "----"
@@ -26,6 +26,7 @@ rm -Rf /var/www/html/*
 echo "----"
 echo "copying from csss-site-frontend to /var/www/html..."
 cp -Rf ./frontend/* /var/www/html
+cp -Rf ./events/* /var/www/html
 
 echo "----"
 echo "all done!"

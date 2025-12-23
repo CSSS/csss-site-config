@@ -5,3 +5,6 @@
 	path = frontend
 	url = https://github.com/CSSS/csss-site-frontend
 	branch = build
+[submodule "events"]
+	path = events
+	url = https://github.com/CSSS/csss-site-events
