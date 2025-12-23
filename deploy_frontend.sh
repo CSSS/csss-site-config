@@ -4,7 +4,7 @@
 # This is for updating both the `build` and `test` folders.
 # This will update the `csss-site-repo` based on what flag you use.
 # This will not update the `backend` submodule.
-
+# This will update both the `frontend` and `events` submodules.
 BASE_WWW="/var/www"      # Where the hosted files live
 BACKUP_DIR="/tmp/backup" # Backup of the currently hosted files
 GIT_USER="csss-site"     # The Linux user that controls the git repo on the deployment VM
@@ -119,6 +119,14 @@ if [ \$? -ne 0 ]; then
     exit 1
 fi
 echo -e "Updating frontend submodule...SUCCESS"
+echo -ne "Updating events submodule..."
+git submodule update events
+if [ \$? -ne 0 ]; then
+    echo -e "Updating events submodule...FAILED"
+    echo "Failed to update events submodule."
+    exit 1
+fi
+echo -e "Updating events submodule...SUCCESS"
 echo "Returning to master branch"
 git switch master
 EOF
@@ -134,30 +142,37 @@ echo "Replacing deployed files..."
 echo "Running commands as $(whoami)..."
 echo -ne "Backing up ${target}..."
 rm -rf ${BACKUP_DIR} # remove old backup if it exists
-if cp -r ${target} ${BACKUP_DIR}; then
+if ! cp -r ${target} ${BACKUP_DIR}; then
   echo -e "\rBacking up ${target}...FAILED"
   echo "Stopping here."
   exit 1
 fi
 echo -e "\rBacking up ${target}...SUCCESS"
 
-echo "Removing current files..."
-rm -rf ${target}/*
-echo -ne "Copying updated files..."
-cp -rf ./frontend/* ${target}
-if [ ! -d "$target" ]; then
-  echo -e "\rCopying updated files...FAILED"
+echo -ne "Copying frontend files..."
+if ! cp -rf ./frontend/* ${target}; then
+  echo -e "\rCopying frontend files...FAILED"
   echo "Moving backup files."
-  mv ${BACKUP_DIR} ${target}
+  rm -rf ${target}/*
+  cp -rf ${BACKUP_DIR}/* ${target}
   echo "Stopping here."
   exit 1
 fi
-echo -e "\rCopying updated files...SUCCESS"
+echo -e "\rCopying frontend files...SUCCESS"
 
+echo -ne "Copying event sites and creating symlinks..."
 EVENTS=("tech-fair" "fall-hacks" "madness" "frosh")
-echo "Creating symlinks to the latest year"
 for event in "${EVENTS[@]}"; do
   event_dir="${target}/${event}"
+
+  if ! cp -rf ./events/* ${target}; then
+    echo -e "\rCopying ${event}...FAILED"
+    echo "Moving backup files."
+    rm -rf ${target}/*
+    cp -rf ${BACKUP_DIR}/* ${target}
+    echo "Stopping here."
+    exit 1
+  fi
 
   if [ ! -d "$event_dir" ]; then
     echo "${event_dir} does not exist."
@@ -174,6 +189,7 @@ for event in "${EVENTS[@]}"; do
   ln -sfn "$latest_year" "${event_dir}/latest"
   echo "Updated latest symlink in ${event_dir} -> ${latest_year}"
 done
+echo -e "\rCopying event sites and creating symlinks...SUCCESS"
 
 echo "Cleaning up backup files..."
 rm -rf ${BACKUP_DIR}
