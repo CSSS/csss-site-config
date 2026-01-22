@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     break
     ;;
   *)
-    echo "Unknown option $($1). Use $($0) -h/--help for usage."
+    echo "Unknown option $1. Use $0 -h/--help for usage."
     exit 1
     ;;
   esac
@@ -93,19 +93,19 @@ sudo -u $GIT_USER bash <<EOF
 echo "Running commands as \$(whoami)..."
 echo "Checking current branch"
 current_branch=\$(git branch --show-current)
-if [ ${branch} != \$current_branch ]; then
+if [ "${branch}" != "\$current_branch" ]; then
     echo -n "Switching to ${branch}..."
     git switch ${branch}
-    if [ $? -ne 0 ]; then
+    if [ \$? -ne 0 ]; then
         echo -e "\rSwitching to ${branch}...FAILED"
         echo "Failed to check out ${branch}."
         exit 1
     fi
-    echo -e "\Switching to ${branch}...SUCCESS"
+    echo -e "\rSwitching to ${branch}...SUCCESS"
 fi
 echo -ne "Updating csss-site-config..."
 git pull origin ${branch}
-if [ $? -ne 0 ]; then
+if [ \$? -ne 0 ]; then
     echo -e "Updating csss-site-config...FAILED"
     echo "Failed to pull from ${branch}."
     exit 1
@@ -113,7 +113,7 @@ fi
 echo -e "Updating csss-site-config...SUCCESS"
 echo -ne "Updating frontend submodule..."
 git submodule update frontend
-if [ $? -ne 0 ]; then
+if [ \$? -ne 0 ]; then
     echo -e "Updating frontend submodule...FAILED"
     echo "Failed to update frontend submodule."
     exit 1
@@ -133,8 +133,8 @@ echo ""
 echo "Replacing deployed files..."
 echo "Running commands as $(whoami)..."
 echo -ne "Backing up ${target}..."
-cp -r ${target} ${BACKUP_DIR}
-if [ ! -d "$BACKUP_DIR" ]; then
+rm -rf ${BACKUP_DIR} # remove old backup if it exists
+if cp -r ${target} ${BACKUP_DIR}; then
   echo -e "\rBacking up ${target}...FAILED"
   echo "Stopping here."
   exit 1
