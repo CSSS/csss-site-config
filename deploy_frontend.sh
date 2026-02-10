@@ -134,7 +134,7 @@ echo "Replacing deployed files..."
 echo "Running commands as $(whoami)..."
 echo -ne "Backing up ${target}..."
 rm -rf ${BACKUP_DIR} # remove old backup if it exists
-if cp -r ${target} ${BACKUP_DIR}; then
+if ! cp -r ${target} ${BACKUP_DIR}; then
   echo -e "\rBacking up ${target}...FAILED"
   echo "Stopping here."
   exit 1
@@ -144,8 +144,7 @@ echo -e "\rBacking up ${target}...SUCCESS"
 echo "Removing current files..."
 rm -rf ${target}/*
 echo -ne "Copying updated files..."
-cp -rf ./frontend/* ${target}
-if [ ! -d "$target" ]; then
+if ! cp -rf ./frontend/* ${target}; then
   echo -e "\rCopying updated files...FAILED"
   echo "Moving backup files."
   mv ${BACKUP_DIR} ${target}
