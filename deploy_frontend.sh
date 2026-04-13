@@ -149,9 +149,11 @@ if ! cp -r ${target} ${BACKUP_DIR}; then
 fi
 echo -e "\rBacking up ${target}...SUCCESS"
 
-echo -ne "Copying frontend files..."
+echo "Removing current files..."
+rm -rf ${target}/*
+echo -ne "Copying updated files..."
 if ! cp -rf ./frontend/* ${target}; then
-  echo -e "\rCopying frontend files...FAILED"
+  echo -e "\rCopying updated files...FAILED"
   echo "Moving backup files."
   rm -rf ${target}/*
   cp -rf ${BACKUP_DIR}/* ${target}
