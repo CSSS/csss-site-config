@@ -31,8 +31,17 @@ fi
 
 echo "----"
 echo "configure apt sources..."
-echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" >/etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+echo "Adding nginx"
+curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor |
+	sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+https://nginx.org/packages/debian $(lsb_release -cs) nginx" |
+	sudo tee /etc/apt/sources.list.d/nginx.list
+echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" |
+	sudo tee /etc/apt/preferences.d/99nginx
 
 echo "----"
 echo "update and upgrade apt..."
@@ -47,12 +56,12 @@ python3 -m venv /opt/certbot
 /opt/certbot/bin/pip install certbot certbot-nginx
 ln -s /opt/certbot/bin/certbot /usr/bin/certbot
 # NEW: add certbot (pip) as a cronjob
-echo "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q" | sudo tee -a /etc/crontab > /dev/null
+echo "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q" | sudo tee -a /etc/crontab >/dev/null
 
 echo "----"
 echo "add user csss_site..."
-useradd csss-site -m # -m: has home /home/csss-site
-usermod -L csss-site # -L: cannot login
+useradd csss-site -m            # -m: has home /home/csss-site
+usermod -L csss-site            # -L: cannot login
 chsh -s /usr/bin/bash csss-site # make user csss-site use the bash shell
 cd /home/csss-site
 
@@ -74,7 +83,7 @@ mkdir /var/www/logs/csss-site-backend
 chown -R www-data:www-data /var/www
 chmod -R ug=rwx,o=rx /var/www
 # nginx config files
-cp ./nginx.conf /etc/nginx/sites-available/csss-site
+cp ./nginx.conf /etc/nginx/conf.d/csss-site
 # remove default configuration to prevent funky certbot behaviour
 rm /etc/nginx/sites-enabled/default
 

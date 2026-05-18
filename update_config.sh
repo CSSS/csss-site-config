@@ -9,9 +9,9 @@ fi
 
 cd /home/csss-site/csss-site-config
 if [ $? -ne 0 ]; then
-    echo "couldn't enter directory /home/csss-site/csss-site-config."
-    echo "stopping here."
-    exit 1
+	echo "couldn't enter directory /home/csss-site/csss-site-config."
+	echo "stopping here."
+	exit 1
 fi
 
 echo "----"
@@ -20,7 +20,7 @@ cp ./sudoers.conf /etc/sudoers.d/csss-site
 
 echo "----"
 echo "update nginx..."
-cp ./nginx.conf /etc/nginx/sites-available/csss-site
+cp ./nginx.conf /etc/nginx/conf.d/csss-site
 certbot --nginx # reconfigure the server with SSL certificates
 nginx -t
 # only restart nginx if config is valid
