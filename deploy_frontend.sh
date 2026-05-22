@@ -130,6 +130,7 @@ echo -e "Updating events submodule...SUCCESS"
 echo "Returning to master branch"
 git switch master
 EOF
+chown -R ${GIT_USER} /home/csss-site/csss-site-config/.git
 if [ $? -ne 0 ]; then
   echo "Problem with running Git commands."
   echo "Stopping here."
