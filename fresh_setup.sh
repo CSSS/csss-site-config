@@ -49,7 +49,7 @@ apt update && apt upgrade -y
 
 echo "----"
 echo "install packages..."
-apt install git software-properties-common python3.11 python3.11-venv libaugeas0 nginx postgresql-15 postgresql-contrib -y
+apt install git software-properties-common python3.11 python3.11-venv libaugeas0 nginx postgresql-15 postgresql-contrib rsync -y
 # install certbot
 python3 -m venv /opt/certbot
 /opt/certbot/bin/pip install --upgrade pip
