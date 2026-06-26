@@ -20,7 +20,7 @@ cp ./sudoers.conf /etc/sudoers.d/csss-site
 
 echo "----"
 echo "update nginx..."
-cp ./nginx.conf /etc/nginx/conf.d/csss-site
+cp ./nginx.conf /etc/nginx/conf.d/csss-site.conf
 certbot --nginx # reconfigure the server with SSL certificates
 nginx -t
 # only restart nginx if config is valid
