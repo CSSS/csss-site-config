@@ -1,17 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-# Version 1.0 of the frontend deployment script
-# This is for updating both the `build` and `test` folders.
-# This will update the `csss-site-repo` based on what flag you use.
+# Version 2.0 of the frontend deployment script
+# This is for updating frontend and event static files.
+# This will update the `csss-site-config` repo.
 # This will not update the `backend` submodule.
-# This will update both the `frontend` and `events` submodules.
+# This will update the `frontend` or `events` submodule based on what flag you use.
 BASE_WWW="/var/www"  # Where the hosted files live
 GIT_USER="csss-site" # The Linux user that controls the git repo on the deployment VM
 BACKUP_DIR=""        # Backup of the currently hosted files
-branch=""            # Which csss-site-config branch to use
-target=""            # The specific directory the hosted files will be moved to
-frontend_target=""   # Where frontend files will be moved to
+branch="master"      # Which csss-site-config branch to use
+target="${BASE_WWW}/html"
+frontend_target="${target}/main"
+deploy_mode=""       # Which static files to deploy
+EVENTS=("tech-fair" "fall-hacks" "madness" "frosh")
 
 cleanup() {
   if [ -n "$BACKUP_DIR" ]; then
@@ -23,20 +25,31 @@ trap cleanup EXIT
 
 restore_backup() {
   echo "Restoring backup files."
-  rsync -a --delete "${BACKUP_DIR}/" "${target}/"
+  if [ "$deploy_mode" = "main" ]; then
+    rsync -a --delete "${BACKUP_DIR}/main/" "${frontend_target}/"
+    return
+  fi
+
+  for event in "${EVENTS[@]}"; do
+    if [ -d "${BACKUP_DIR}/${event}" ]; then
+      mkdir -p "${target}/${event}"
+      rsync -a --delete "${BACKUP_DIR}/${event}/" "${target}/${event}/"
+    else
+      rm -rf "${target:?}/${event}"
+    fi
+  done
 }
 
-# TODO: Add flags to make deployments more granular so that updating subsites won't disturb other things
 show_help() {
   echo "Usage: $0 [OPTIONS]"
-  echo "This is for updating both the 'build' and 'test' sites."
+  echo "This is for updating the main frontend or event sites."
   echo "This will not update the 'backend' submodule."
   echo "This will update the 'csss-site-config' repo."
   echo ""
   echo "Options:"
-  echo "  -h, --help  Display this message"
-  echo "  -t, --test  Full deployment of the test site"
-  echo "  -f, --full  Full deployment of the main site"
+  echo "  -h, --help    Display this message"
+  echo "  -m, --main    Deploy ./frontend/ to /var/www/html/main"
+  echo "  -e, --events  Deploy ./events/ event directories to /var/www/html"
 }
 
 # If no args are passed show help and fail
@@ -52,14 +65,12 @@ while [[ $# -gt 0 ]]; do
     show_help
     exit 0
     ;;
-  -t | --test)
-    branch="develop"
-    target="${BASE_WWW}/test-sfucsss"
+  -m | --main)
+    deploy_mode="main"
     break
     ;;
-  -f | --full)
-    branch="master"
-    target="${BASE_WWW}/html"
+  -e | --events)
+    deploy_mode="events"
     break
     ;;
   *)
@@ -68,6 +79,11 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+if [ -z "$deploy_mode" ]; then
+  echo "No deployment mode selected. Use $0 -h/--help for usage."
+  exit 1
+fi
 
 echo "Running checks..."
 # Check that you're the root user first when running the script.
@@ -89,7 +105,6 @@ if [ ! -d "$target" ]; then
   exit 1
 fi
 echo -e "\rChecking target directory exists...SUCCESS"
-frontend_target="${target}/main"
 echo -ne "Checking rsync exists..."
 if ! command -v rsync >/dev/null 2>&1; then
   echo -e "\rChecking rsync exists...FAILED"
@@ -133,20 +148,24 @@ if ! git pull origin "${branch}"; then
     exit 1
 fi
 echo -e "Updating csss-site-config...SUCCESS"
-echo -ne "Updating frontend submodule..."
-if ! git submodule update frontend; then
-    echo -e "Updating frontend submodule...FAILED"
-    echo "Failed to update frontend submodule."
-    exit 1
+if [ "${deploy_mode}" = "main" ]; then
+    echo -ne "Updating frontend submodule..."
+    if ! git submodule update frontend; then
+        echo -e "Updating frontend submodule...FAILED"
+        echo "Failed to update frontend submodule."
+        exit 1
+    fi
+    echo -e "Updating frontend submodule...SUCCESS"
 fi
-echo -e "Updating frontend submodule...SUCCESS"
-echo -ne "Updating events submodule..."
-if ! git submodule update events; then
-    echo -e "Updating events submodule...FAILED"
-    echo "Failed to update events submodule."
-    exit 1
+if [ "${deploy_mode}" = "events" ]; then
+    echo -ne "Updating events submodule..."
+    if ! git submodule update events; then
+        echo -e "Updating events submodule...FAILED"
+        echo "Failed to update events submodule."
+        exit 1
+    fi
+    echo -e "Updating events submodule...SUCCESS"
 fi
-echo -e "Updating events submodule...SUCCESS"
 EOF
 then
   echo "Problem updating Git submodules."
@@ -160,68 +179,81 @@ echo "Updating Git submodules done."
 echo ""
 echo "Replacing deployed files..."
 echo "Running commands as $(whoami)..."
-echo -ne "Backing up ${target}..."
 BACKUP_DIR="$(mktemp -d)"
-if ! rsync -a --delete "${target}/" "${BACKUP_DIR}/"; then
-  echo -e "\rBacking up ${target}...FAILED"
-  echo "Stopping here."
-  exit 1
-fi
-echo -e "\rBacking up ${target}...SUCCESS"
 
-echo -ne "Copying frontend files to ${frontend_target}..."
-mkdir -p "$frontend_target"
-if ! rsync -a --delete ./frontend/ "${frontend_target}/"; then
-  echo -e "\rCopying updated files...FAILED"
-  restore_backup
-  echo "Stopping here."
-  exit 1
-fi
-echo -e "\rCopying frontend files...SUCCESS"
-
-echo -ne "Copying event sites and creating symlinks..."
-EVENTS=("tech-fair" "fall-hacks" "madness" "frosh")
-if ! rsync -a ./events/ "${target}/"; then
-  echo -e "\rCopying event sites and creating symlinks...FAILED"
-  restore_backup
-  echo "Stopping here."
-  exit 1
-fi
-
-for event in "${EVENTS[@]}"; do
-  event_dir="${target}/${event}"
-
-  if [ ! -d "$event_dir" ]; then
-    echo "${event_dir} does not exist."
-    continue
+if [ "$deploy_mode" = "main" ]; then
+  echo -ne "Backing up ${frontend_target}..."
+  mkdir -p "$frontend_target"
+  mkdir -p "${BACKUP_DIR}/main"
+  if ! rsync -a --delete "${frontend_target}/" "${BACKUP_DIR}/main/"; then
+    echo -e "\rBacking up ${frontend_target}...FAILED"
+    echo "Stopping here."
+    exit 1
   fi
+  echo -e "\rBacking up ${frontend_target}...SUCCESS"
 
-  latest_year=""
-  for year_dir in "$event_dir"/*/; do
-    if [ ! -d "$year_dir" ]; then
-      continue
-    fi
-
-    year="$(basename "$year_dir")"
-    if [[ "$year" =~ ^[0-9]{4}$ ]] && [[ -z "$latest_year" || "$year" > "$latest_year" ]]; then
-      latest_year="$year"
-    fi
-  done
-
-  if [ -z "$latest_year" ]; then
-    echo "No years found in ${event_dir}"
-    continue
-  fi
-
-  if ! ln -sfn "$latest_year" "${event_dir}/latest"; then
-    echo "Failed to update latest symlink in ${event_dir}."
+  echo -ne "Copying frontend files to ${frontend_target}..."
+  if ! rsync -a --delete ./frontend/ "${frontend_target}/"; then
+    echo -e "\rCopying frontend files...FAILED"
     restore_backup
     echo "Stopping here."
     exit 1
   fi
-  echo "Updated latest symlink in ${event_dir} -> ${latest_year}"
-done
-echo -e "\rCopying event sites and creating symlinks...SUCCESS"
+  echo -e "\rCopying frontend files...SUCCESS"
+else
+  echo -ne "Backing up event sites..."
+  for event in "${EVENTS[@]}"; do
+    if [ -d "${target}/${event}" ]; then
+      rsync -a --delete "${target}/${event}/" "${BACKUP_DIR}/${event}/"
+    fi
+  done
+  echo -e "\rBacking up event sites...SUCCESS"
+
+  echo -ne "Copying event sites and creating symlinks..."
+  for event in "${EVENTS[@]}"; do
+    source_dir="./events/${event}"
+    event_dir="${target}/${event}"
+
+    if [ ! -d "$source_dir" ]; then
+      echo "${source_dir} does not exist."
+      continue
+    fi
+
+    mkdir -p "$event_dir"
+    if ! rsync -a --delete "${source_dir}/" "${event_dir}/"; then
+      echo -e "\rCopying ${event}...FAILED"
+      restore_backup
+      echo "Stopping here."
+      exit 1
+    fi
+
+    latest_year=""
+    for year_dir in "$event_dir"/*/; do
+      if [ ! -d "$year_dir" ]; then
+        continue
+      fi
+
+      year="$(basename "$year_dir")"
+      if [[ "$year" =~ ^[0-9]{4}$ ]] && [[ -z "$latest_year" || "$year" > "$latest_year" ]]; then
+        latest_year="$year"
+      fi
+    done
+
+    if [ -z "$latest_year" ]; then
+      echo "No years found in ${event_dir}"
+      continue
+    fi
+
+    if ! ln -sfn "$latest_year" "${event_dir}/latest"; then
+      echo "Failed to update latest symlink in ${event_dir}."
+      restore_backup
+      echo "Stopping here."
+      exit 1
+    fi
+    echo "Updated latest symlink in ${event_dir} -> ${latest_year}"
+  done
+  echo -e "\rCopying event sites and creating symlinks...SUCCESS"
+fi
 
 echo "Cleaning up backup files..."
 cleanup
