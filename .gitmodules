@@ -1,7 +1,3 @@
 [submodule "backend"]
 	path = backend
 	url = https://github.com/CSSS/csss-site-backend
-[submodule "frontend"]
-	path = frontend
-	url = https://github.com/CSSS/csss-site-frontend
-	branch = build
