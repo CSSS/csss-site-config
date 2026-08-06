@@ -49,7 +49,13 @@ apt update && apt upgrade -y
 
 echo "----"
 echo "install packages..."
-apt install git software-properties-common python3.11 python3.11-venv libaugeas0 nginx postgresql-15 postgresql-contrib rsync -y
+apt install git software-properties-common python3.13 python3.13-venv libaugeas0 nginx postgresql-15 postgresql-contrib rsync -y
+
+echo "----"
+echo "install uv..."
+curl -LsSf https://astral.sh/uv/install.sh |
+	env UV_UNMANAGED_INSTALL=/usr/local/bin sh
+
 # install certbot
 python3 -m venv /opt/certbot
 /opt/certbot/bin/pip install --upgrade pip
@@ -123,16 +129,14 @@ sudo -u postgres psql --command='GRANT ALL PRIVILEGES ON DATABASE main TO "csss-
 sudo -u postgres psql main --command='GRANT ALL ON SCHEMA public TO "csss-site"'
 
 echo "----"
-echo "create a virtual environment for csss-site..."
-sudo -u csss-site python3.11 -m venv ./.venv
-
-echo "----"
-echo "install pip packages for csss-site..."
-source ./.venv/bin/activate
-cd backend
-sudo -u csss-site ../.venv/bin/pip install -r ./requirements.txt
-cd .. # back to csss-site-config
-deactivate
+echo "install Python 3.13 and backend dependencies..."
+sudo -u csss-site -H env \
+	UV_PROJECT_ENVIRONMENT=/home/csss-site/csss-site-config/.venv \
+	/usr/local/bin/uv sync \
+	--project /home/csss-site/csss-site-config/backend \
+	--locked \
+	--python 3.13 \
+	--managed-python
 
 echo "----"
 echo "configure csss-site service..."
