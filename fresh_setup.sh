@@ -88,10 +88,19 @@ mkdir /var/www/logs
 mkdir /var/www/logs/csss-site-backend
 chown -R www-data:www-data /var/www
 chmod -R ug=rwx,o=rx /var/www
+
 # nginx config files
 cp ./nginx.conf /etc/nginx/conf.d/csss-site
 # remove default configuration to prevent funky certbot behaviour
 rm /etc/nginx/sites-enabled/default
+
+# shared media files
+groupadd csss-media
+usermod -aG csss-media csss-site # Server will upload media
+usermod -aG csss-media nginx     # Nginx will read media
+mkdir -p /srv/csss/media
+chown -R csss-site:csss-media /srv/csss/media
+chmod 2750 /srv/csss/media
 
 # prompt user to modify the nginx configuration if they so please
 echo "Do you want to modify the nginx configuration file?"
