@@ -1,0 +1,14 @@
+[Unit]
+Description=Fetches and parses the bus schedules from TransLink for the upper bus loop routes
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=csss-site
+Group=csss-site
+WorkingDirectory=/home/csss-site/csss-site-config/backend/src
+Environment=HOME=/home/csss-site
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/local/bin/uv run --project /home/csss-site/csss-site-config/backend --no-sync python -m scripts.refresh_translink_static
+TimeoutStartSec=15min

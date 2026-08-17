@@ -1,0 +1,10 @@
+[Unit]
+Description=Runs the CSSS TransLink static refresh weekly
+
+[Timer]
+OnCalendar=Fri *-*-* 23:00:00 America/Vancouver
+Persistent=true
+Unit=translink-static-schedule.service
+
+[Install]
+WantedBy=timers.target
