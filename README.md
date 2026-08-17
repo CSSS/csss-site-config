@@ -32,7 +32,7 @@ Alternatively, if you would like to update a submodule to the most recent commit
 
 `git submodule update --remote`
 
-And promptly `git add` either backend/frontend folder to update the submodules in the csss-site-config repository.
+And promptly `git add` the backend folder to update the submodules in the csss-site-config repository.
 
 ### Deploying
 

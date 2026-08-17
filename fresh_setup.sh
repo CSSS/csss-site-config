@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # this is a script for seting up the website from a fresh install
 
@@ -24,10 +26,12 @@ echo "(P)roceed, (c)ancel?"
 read choice
 
 # if choice isn't (P)roceed, just cancel
-if [ $choice != 'P' ]; then
+if [ "$choice" != "P" ]; then
 	echo "OK, cancelling."
 	exit 0
 fi
+
+MAIN_NGINX_CONFIG=/etc/nginx/conf.d/csss-site.conf
 
 # Configure 1GB swapfile
 echo "----"
@@ -60,7 +64,16 @@ apt update && apt upgrade -y
 
 echo "----"
 echo "install packages..."
-apt install git software-properties-common python3.13 python3.13-venv libaugeas0 nginx postgresql-15 postgresql-contrib rsync -y
+apt install \
+	git \
+	software-properties-common \
+	python3 \
+	python3-venv \
+	libaugeas0 \
+	nginx \
+	postgresql-15 \
+	postgresql-contrib \
+	rsync -y
 
 echo "----"
 echo "install uv..."
@@ -97,13 +110,10 @@ echo "configure nginx..."
 usermod -aG www-data csss-site
 mkdir /var/www/logs
 mkdir /var/www/logs/csss-site-backend
+mkdir -p /var/www/html/main   # Main site files
+mkdir -p /var/www/html/events # Events
 chown -R www-data:www-data /var/www
 chmod -R ug=rwx,o=rx /var/www
-
-# nginx config files
-cp ./nginx.conf /etc/nginx/conf.d/csss-site
-# remove default configuration to prevent funky certbot behaviour
-rm /etc/nginx/sites-enabled/default
 
 # shared media files
 groupadd csss-media
@@ -112,6 +122,11 @@ usermod -aG csss-media nginx     # Nginx will read media
 mkdir -p /srv/csss/media
 chown -R csss-site:csss-media /srv/csss/media
 chmod 2750 /srv/csss/media
+
+# nginx config files
+install -m 0644 ./nginx.conf "$MAIN_NGINX_CONFIG"
+# remove default configuration to prevent funky certbot behaviour
+rm /etc/nginx/sites-enabled/default
 
 # prompt user to modify the nginx configuration if they so please
 echo "Do you want to modify the nginx configuration file?"
@@ -129,7 +144,6 @@ while true; do
 	fi
 done
 
-ln -s /etc/nginx/sites-available/csss-site /etc/nginx/sites-enabled/csss-site
 echo "You'll need to fill out the certbot configuration manually."
 echo "Use csss-sysadmin@sfu.ca for contact email."
 certbot --nginx
@@ -149,9 +163,8 @@ sudo -u postgres psql --command='GRANT ALL PRIVILEGES ON DATABASE main TO "csss-
 sudo -u postgres psql main --command='GRANT ALL ON SCHEMA public TO "csss-site"'
 
 echo "----"
-echo "install Python 3.13 and backend dependencies..."
+echo "install uv-managed Python 3.13, and backend dependencies..."
 sudo -u csss-site -H env \
-	UV_PROJECT_ENVIRONMENT=/home/csss-site/csss-site-config/.venv \
 	/usr/local/bin/uv sync \
 	--project /home/csss-site/csss-site-config/backend \
 	--locked \

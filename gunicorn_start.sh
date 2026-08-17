@@ -1,24 +1,22 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-NAME=csss-site
+set -euo pipefail
+
 DIR=/home/csss-site/csss-site-config/backend/src
-USER=csss-site
-GROUP=csss-site
+GUNICORN=/home/csss-site/csss-site-config/backend/.venv/bin/gunicorn
+NAME=csss-site
 WORKERS=1
 WORKER_CLASS=uvicorn.workers.UvicornWorker
-VENV=/home/csss-site/csss-site-config/.venv/bin/activate
 BIND=unix:/var/www/gunicorn.sock
 LOG_LEVEL=error
 
-cd $DIR
-source $VENV
+cd "$DIR"
 
-gunicorn main:app \
+# Use exec so we don't spawn a new process and instead replace the shell
+exec "$GUNICORN" main:app \
   --name $NAME \
   --workers $WORKERS \
   --worker-class $WORKER_CLASS \
-  --user=$USER \
-  --group=$GROUP \
   --bind=$BIND \
   --log-level=$LOG_LEVEL \
   --log-file=-
