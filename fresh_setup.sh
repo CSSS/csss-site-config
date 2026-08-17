@@ -29,6 +29,17 @@ if [ $choice != 'P' ]; then
 	exit 0
 fi
 
+# Configure 1GB swapfile
+echo "----"
+echo "configure swapfile..."
+fallocate -l 1G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+sysctl vm.swappiness=10
+echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf
+
 echo "----"
 echo "configure apt sources..."
 echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" >/etc/apt/sources.list.d/pgdg.list
