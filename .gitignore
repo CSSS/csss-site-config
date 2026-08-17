@@ -1,0 +1,23 @@
+# Environment files and secret material
+.env
+.env.*
+*.env
+*.env.*
+*.secret
+*.secrets
+secrets/
+*.key
+*.pem
+id_rsa*
+id_ed25519*
+
+# Database dumps and backup artifacts
+*.sql
+*.sql.gz
+*.dump
+*.pgdump
+*.backup
+*.bak
+
+# Virtual environments
+.venv
