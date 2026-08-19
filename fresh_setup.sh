@@ -110,8 +110,10 @@ echo "configure nginx..."
 usermod -aG www-data csss-site
 mkdir /var/www/logs
 mkdir /var/www/logs/csss-site-backend
+mkdir /var/www/logs/csss-site-docs
 mkdir -p /var/www/html/main   # Main site files
 mkdir -p /var/www/html/events # Events
+mkdir -p /var/www/html/errors # Error pages
 chown -R www-data:www-data /var/www
 chmod -R ug=rwx,o=rx /var/www
 
@@ -177,5 +179,7 @@ cp ./csss-site.service /etc/systemd/system/csss-site.service
 systemctl enable csss-site
 
 echo "----"
-echo "deploy csss-site..."
+echo "deploy static pages"
+rsync -a errors /var/www/html/errors
+
 ./deploy.sh
