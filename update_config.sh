@@ -20,7 +20,9 @@ cp ./sudoers.conf /etc/sudoers.d/csss-site
 
 echo "----"
 echo "update nginx..."
-cp ./nginx.conf /etc/nginx/conf.d/csss-site.conf
+rsync -a --exclude='/snippets' ./nginx/ /etc/nginx/conf.d/
+rsync -a ./nginx/snippets/ /etc/nginx/snippets/
+rsync -a --delete ./errors/ /var/www/html/errors/
 certbot --nginx # reconfigure the server with SSL certificates
 nginx -t
 # only restart nginx if config is valid
