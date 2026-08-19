@@ -127,6 +127,7 @@ chmod 2750 /srv/csss/media
 
 # nginx config files
 install -m 0644 ./nginx.conf "$MAIN_NGINX_CONFIG"
+rsync -a nginx/snippets/ /etc/nginx/snippets
 # remove default configuration to prevent funky certbot behaviour
 rm /etc/nginx/sites-enabled/default
 
