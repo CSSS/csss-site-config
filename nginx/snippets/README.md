@@ -3,7 +3,7 @@
 This directory contains the snippets you can use throughout other configs.
 Be careful modifying them as they may be used in multiple areas.
 
-To use them add `include relative/path/to/snippets/<snippet.conf>` in the server block.
+To use them add `include snippets/<snippet.conf>` in the server block.
 ```nginx
 server {
     server_name example.com;
@@ -12,6 +12,8 @@ server {
     # ...the rest of the config
 }
 ```
+
+You'll also need to move the snippets to `/etc/nginx/snippets`.
 
 ## Auth Guard (auth-guard.conf)
 
