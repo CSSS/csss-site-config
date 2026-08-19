@@ -31,7 +31,7 @@ if [ "$choice" != "P" ]; then
 	exit 0
 fi
 
-MAIN_NGINX_CONFIG=/etc/nginx/conf.d/csss-site.conf
+MAIN_NGINX_CONFIG=/etc/nginx/conf.d
 
 # Configure 1GB swapfile
 echo "----"
@@ -111,9 +111,6 @@ usermod -aG www-data csss-site
 mkdir /var/www/logs
 mkdir /var/www/logs/csss-site-backend
 mkdir /var/www/logs/csss-site-docs
-mkdir -p /var/www/html/main   # Main site files
-mkdir -p /var/www/html/events # Events
-mkdir -p /var/www/html/errors # Error pages
 chown -R www-data:www-data /var/www
 chmod -R ug=rwx,o=rx /var/www
 
@@ -126,26 +123,10 @@ chown -R csss-site:csss-media /srv/csss/media
 chmod 2750 /srv/csss/media
 
 # nginx config files
-install -m 0644 ./nginx.conf "$MAIN_NGINX_CONFIG"
-rsync -a nginx/snippets/ /etc/nginx/snippets
+rsync -a --exclude='/snippets/' ./nginx/ "$MAIN_NGINX_CONFIG/"
+rsync -a nginx/snippets/ /etc/nginx/snippets/
 # remove default configuration to prevent funky certbot behaviour
 rm /etc/nginx/sites-enabled/default
-
-# prompt user to modify the nginx configuration if they so please
-echo "Do you want to modify the nginx configuration file?"
-while true; do
-	echo "(M)odify, (c)ontinue?"
-	read choice
-
-	if [ $choice = 'M' ]; then
-		vim /etc/nginx/sites-available/csss-site
-		break
-	elif [ $choice = 'c' ]; then
-		break
-	else
-		echo "Not sure what you mean..."
-	fi
-done
 
 echo "You'll need to fill out the certbot configuration manually."
 echo "Use csss-sysadmin@sfu.ca for contact email."
@@ -180,7 +161,11 @@ cp ./csss-site.service /etc/systemd/system/csss-site.service
 systemctl enable csss-site
 
 echo "----"
-echo "deploy static pages"
-rsync -a errors /var/www/html/errors
+echo "deploy static sites"
+rsync -a errors/ /var/www/html/errors/
+mkdir -p /var/www/html/main   # Main site
+mkdir -p /var/www/html/docs   # Documentation site
+mkdir -p /var/www/html/events # Event sites
+mkdir -p /var/www/html/errors # Error pages
 
 ./deploy.sh
