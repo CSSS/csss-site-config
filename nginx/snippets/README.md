@@ -25,12 +25,15 @@ Adds two internal locations related to authentication.
 ### Usage
 
 You'll include this snippet and also some other lines, based on if the site is a static site or a SPA.
+You also need to include the `$auth_required_role` value to designate the protection level on those pages.
+See csss-site-backend for available values.
 
 ```nginx
 # Static site
 server {
     server_name static.site;
 
+    set $auth_required_role "exec";
     include snippets/auth-guard.conf;
 
     # ...
@@ -47,6 +50,7 @@ server {
 server {
     server_name spa.site;
 
+    set $auth_required_role "exec";
     include snippets/auth-guard.conf;
 
     # ...
