@@ -13,6 +13,9 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Jobs
+# Renew TLS certificates at 4:37AM and 4:37PM every day
+37 4,16 * * * root /opt/certbot/bin/certbot renew -q
+
 # Clean expired CAS authentication redirects every 15 minutes
 */15 * * * * csss-site /usr/bin/psql main -c "DELETE FROM auth_redirect WHERE expires_at < NOW();" >/dev/null 2>&1
 
