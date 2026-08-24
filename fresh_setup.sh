@@ -20,7 +20,7 @@ fi
 
 echo "hi sysadmin!"
 echo "this script will install (almost) everything needed to run the csss website"
-echo "(make sure you are running on a Debian 12 Linux machine as the superuser!)"
+echo "(make sure you are running on a Debian 13 Linux machine as the superuser!)"
 
 echo "(P)roceed, (c)ancel?"
 read choice
@@ -45,15 +45,32 @@ sysctl vm.swappiness=10
 echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf
 
 echo "----"
+echo "install apt source prerequisites..."
+apt update
+apt install -y ca-certificates curl gnupg
+
+source /etc/os-release
+
+echo "----"
 echo "configure apt sources..."
-echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" >/etc/apt/sources.list.d/pgdg.list
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+install -d -m 0755 /usr/share/postgresql-common/pgdg
+curl --fail --silent --show-error \
+	-o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+	https://www.postgresql.org/media/keys/ACCC4CF8.asc
+cat >/etc/apt/sources.list.d/pgdg.sources <<EOF
+Types: deb
+URIs: https://apt.postgresql.org/pub/repos/apt
+Suites: ${VERSION_CODENAME}-pgdg
+Architectures: $(dpkg --print-architecture)
+Components: main
+Signed-By: /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+EOF
 
 echo "Adding nginx"
-curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor |
+curl --fail --silent --show-error https://nginx.org/keys/nginx_signing.key | gpg --dearmor |
 	sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-https://nginx.org/packages/debian $(lsb_release -cs) nginx" |
+https://nginx.org/packages/debian ${VERSION_CODENAME} nginx" |
 	sudo tee /etc/apt/sources.list.d/nginx.list
 echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" |
 	sudo tee /etc/apt/preferences.d/99nginx
@@ -71,8 +88,7 @@ apt install \
 	python3-venv \
 	libaugeas0 \
 	nginx \
-	postgresql-15 \
-	postgresql-contrib \
+	postgresql-18 \
 	rsync -y
 
 echo "----"
@@ -139,12 +155,9 @@ systemctl enable nginx && systemctl start nginx
 
 echo "----"
 echo "configure postgres..."
-# see https://towardsdatascience.com/setting-up-postgresql-in-debian-based-linux-e4985b0b766f for more details
-# NOTE: the installation of postgresql-15 creates the postgres user, which has special privileges
-sudo -u postgres createdb --no-password main
-sudo -u postgres createuser --no-password csss-site
-sudo -u postgres psql --command='GRANT ALL PRIVILEGES ON DATABASE main TO "csss-site"'
-sudo -u postgres psql main --command='GRANT ALL ON SCHEMA public TO "csss-site"'
+# NOTE: the installation of postgresql-18 creates the postgres user, which has special privileges
+sudo -u postgres createuser --no-password --login csss-site
+sudo -u postgres createdb --no-password --owner=csss-site main
 
 echo "----"
 echo "install uv-managed Python 3.13, and backend dependencies..."
