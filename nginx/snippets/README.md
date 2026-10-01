@@ -231,3 +231,12 @@ server {
 }
 
 ```
+
+## Backend Proxy Snippet
+
+The snippet is `backend-proxy.conf` and it provides the standard configuration when proxying
+requests to our backend.
+
+### Usage
+
+1. Add `backend-proxy.conf` at the location level.
